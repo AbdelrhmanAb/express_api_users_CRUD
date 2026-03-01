@@ -1,28 +1,26 @@
 
 const data = require("../date/date1.js")
 
-const express = require("express")
-const { body, validationResult } = require("express-validator")
+const {  validationResult } = require("express-validator");
+
+const User = require("../moduls/users.js")
 
 
 
-const getAllUsers =  (req, res) => {
-  return res.status(200).json(data)
+
+const getAllUsers =  async(req, res) => {
+
+  const usersTable = await User.find()
+  
+  return res.status(200).json(usersTable)
 }
 
-const getUser = (req, res) => {
-  const Id_User = +req.params.id
+const getUser = async(req, res) => {
+  const Id_User = req.params.id
 
-
-  const person = data.find((item) => item.id === Id_User)
-  if (!person) {
-    return res.status(404).json({
-      errpr: 404,
-      massege: "not found"
-    })
-
-  }
-  return res.json(person)
+  const user = await User.findById(Id_User)
+ 
+  return res.json(user)
 }
 
 
@@ -31,7 +29,6 @@ const createUser = async (req, res) => {
       const errors = validationResult(req)
       const body = await req.body
       console.log((errors));
-      const newPerson = { id: data.length + 1, ...body }
 
       if (!errors.isEmpty()) {
         return res.status(400).json({
@@ -41,56 +38,53 @@ const createUser = async (req, res) => {
 
       }
 
-      const exist = data.find((i) => {
-        return i.name === body.name
+        const usersTable = await User.find()
+        const userIsDefind =  usersTable.find((i) => {
+        return i.email === body.email
       })
 
-      if (!exist) {
-        data.push(newPerson)
-
+      if (!userIsDefind) {
+       const user = new User({...body})
+        await user.save()
+         return res.status(201).json([{
+        stutus:201,
+        msg:"create success"},
+      
+      user])
       }
 
+      return res.status(409).json({
+        stutus:409,
+        msg:"This email is used"
+      })
 
-      return res.status(201).json(newPerson)
+     
 }
 
 
 
-const updateUser = (req, res)=>{
-const Id_User = +req.params.id
-
-
-  let person = data.find((item) => item.id === Id_User)
-  if (!person) {
-    return res.status(404).json({
-      errpr: 404,
-      massege: "not found"
-    })
- 
-  }
-
-  person = {...person,...req.body}
-  return res.json(person)
+const updateUser = async(req, res)=>{
+const Id_User = req.params.id
+try {
+ const UpdateUser =await User.updateOne({ _id:Id_User},{$set:{...req.body}})
+  return res.status(201).json(UpdateUser,"succses")
+} catch (error) {
+  return res.status(400).json({error:error})
+  
 }
 
 
-const deleteUser =(req, res)=>{
-const Id_User = +req.params.id
+}
 
 
-  let person = data.find((item) => item.id === Id_User)
-  if (!person) {
-    return res.status(404).json({
-      errpr: 404,
-      massege: "not found"
-    })
- 
-  }
+const deleteUser =async(req, res)=>{
+const Id_User = req.params.id
 
-  const newData = data.filter((item)=>{
-    return item.id !== Id_User
-  })
-  return res.json(person)
+const DeLData = await User.deleteOne({_id:Id_User})
+res.status(200).json({success:true,DeLData})
+
+
+  
 }
 
 
