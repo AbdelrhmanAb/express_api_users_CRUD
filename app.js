@@ -2,6 +2,12 @@
 
 
 const express = require("express")
+require("dotenv").config()
+
+const cors = require("cors")
+
+
+const HttpTxtResponse = require("./utls/httptextresponse.js")
 
 
 const app = express()
@@ -11,15 +17,25 @@ const router = require("./routes/routesUsers")
 
 const mongoose  = require("mongoose")
 
-const url = "mongodb+srv://bwsbssnnbdddn_db_user:oOGBRW5UqeBZ2Rz9@cluster0.w8efoin.mongodb.net/ENVDB"
-
+const url =process.env.Atlas_mongo_url
 mongoose.connect(url).then(
     console.log("app run"));
-    
+app.use(cors())    
 
 app.use("/api/users", router)
 
+/// ================ NOTFOUND 404 ========>>
+const Notfound = (req, res)=>{
+
+res.status(404).json({
+  stutus: HttpTxtResponse.FAIL,
+  data:{
+    msg : "this page not found"
+  }
+})
+}
+
+app.use(Notfound)
 
 
-
-app.listen(3000, () => console.log("hello"));
+app.listen(process.env.port, () => console.log("hello"));
